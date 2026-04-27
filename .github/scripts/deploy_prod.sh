@@ -103,9 +103,12 @@ create_kong_deployment() {
 
   revision_json="$(jq -c -n --arg content "$appspec_content" '{revisionType:"AppSpecContent", appSpecContent:{content:$content}}')"
 
+  echo "Deploying Kong weight update with CodeDeploy config: ${KONG_WEIGHT_DEPLOYMENT_CONFIG}"
+
   KONG_DEPLOYMENT_ID="$(aws deploy create-deployment \
     --application-name "$KONG_CODEDEPLOY_APP_NAME" \
     --deployment-group-name "$KONG_CODEDEPLOY_GROUP_NAME" \
+    --deployment-config-name "$KONG_WEIGHT_DEPLOYMENT_CONFIG" \
     --revision "$revision_json" \
     --query 'deploymentId' \
     --output text)"
@@ -169,6 +172,7 @@ require_env IMAGE_URI
 
 PEDIDOS_PREFIX="${PEDIDOS_DEPLOY_CONTRACT_PREFIX:-/smartlogix/pedidos/deploy}"
 KONG_PREFIX="${KONG_DEPLOY_CONTRACT_PREFIX:-/smartlogix/kong/deploy}"
+KONG_WEIGHT_DEPLOYMENT_CONFIG="${KONG_WEIGHT_DEPLOYMENT_CONFIG:-CodeDeployDefault.ECSAllAtOnce}"
 CANARY_STABLE_WEIGHT="${CANARY_STABLE_WEIGHT:-90}"
 CANARY_WEIGHT="${CANARY_WEIGHT:-10}"
 CANARY_BAKE_SECONDS="${CANARY_BAKE_SECONDS:-60}"

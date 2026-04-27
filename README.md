@@ -29,3 +29,4 @@ Tambien se soportan `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_NAME`, `DATABASE
 - PR: crea un preview aislado con `srv-pedidos-pr-<numero>`, un Kong preview y un namespace Cloud Map `smartlogix-pr-<numero>.local`.
 - Cierre de PR: elimina los recursos efimeros y ejecuta limpieza del schema `pr_<numero>`.
 - `main`: despliega con canary controlado por Kong usando `pedidos` y `pedidos-canary`.
+- Los cambios de pesos de Kong que hace este pipeline usan `CodeDeployDefault.ECSAllAtOnce` por defecto para no heredar el canary lento de releases reales de Kong. Se puede ajustar con `KONG_WEIGHT_DEPLOYMENT_CONFIG`.
