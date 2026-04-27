@@ -33,7 +33,16 @@ class DatabasePool {
   }
 
   shouldUseSsl() {
-    return process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : false;
+    if (process.env.DATABASE_SSL === 'false') {
+      return false;
+    }
+
+    if (process.env.DATABASE_SSL === 'true') {
+      return { rejectUnauthorized: false };
+    }
+
+    const databaseEndpoint = process.env.DATABASE_URL || process.env.DATABASE_HOST || '';
+    return databaseEndpoint.includes('.rds.amazonaws.com') ? { rejectUnauthorized: false } : false;
   }
 }
 

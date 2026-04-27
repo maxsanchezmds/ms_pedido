@@ -46,7 +46,7 @@ patch_pedidos_task_definition() {
       if .name == $container then
         .image = $image |
         del(.command) |
-        .environment = ((.environment // []) | map(select(.name != "NODE_ENV" and .name != "DATABASE_SCHEMA")) + [{"name":"NODE_ENV","value":"main"}])
+        .environment = ((.environment // []) | map(select(.name != "NODE_ENV" and .name != "DATABASE_SCHEMA" and .name != "DATABASE_SSL")) + [{"name":"NODE_ENV","value":"main"},{"name":"DATABASE_SSL","value":"true"}])
       else
         .
       end

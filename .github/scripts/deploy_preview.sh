@@ -111,10 +111,11 @@ patch_microservice_task_definition() {
           .image = $image |
           del(.command) |
           .environment = ((.environment // [])
-            | map(select(.name != "NODE_ENV" and .name != "DATABASE_SCHEMA"))
+            | map(select(.name != "NODE_ENV" and .name != "DATABASE_SCHEMA" and .name != "DATABASE_SSL"))
             + [
                 {"name":"NODE_ENV","value":$node_env},
-                {"name":"DATABASE_SCHEMA","value":$schema}
+                {"name":"DATABASE_SCHEMA","value":$schema},
+                {"name":"DATABASE_SSL","value":"true"}
               ])
         else
           .
