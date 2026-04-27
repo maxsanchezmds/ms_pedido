@@ -1,0 +1,27 @@
+{
+  "name": "ms_pedido",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Microservicio de pedidos Smartlogix",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "node src/main.js",
+    "drop:preview-schema": "node src/drop-preview-schema.js",
+    "test": "jest --runInBand"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.1.19",
+    "@nestjs/core": "^11.1.19",
+    "@nestjs/platform-express": "^11.1.19",
+    "pg": "8.16.3",
+    "reflect-metadata": "0.2.2",
+    "rxjs": "7.8.2"
+  },
+  "devDependencies": {
+    "jest": "30.0.5",
+    "supertest": "7.1.4"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
