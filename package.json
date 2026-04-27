@@ -3,11 +3,14 @@
   "version": "1.0.0",
   "private": true,
   "description": "Microservicio de pedidos Smartlogix",
-  "main": "src/main.js",
+  "main": "dist/main.js",
   "scripts": {
-    "start": "node src/main.js",
-    "drop:preview-schema": "node src/drop-preview-schema.js",
-    "test": "jest --runInBand"
+    "clean": "node -e \"const fs=require('node:fs'); for (const d of ['dist','dist-test']) fs.rmSync(d,{recursive:true,force:true});\"",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/main.js",
+    "drop:preview-schema": "node dist/drop-preview-schema.js",
+    "pretest": "npm run clean && tsc -p tsconfig.test.json",
+    "test": "jest --config jest.config.js --runInBand"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.19",
@@ -18,8 +21,12 @@
     "rxjs": "7.8.2"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.19.17",
+    "@types/pg": "^8.20.0",
     "jest": "30.0.5",
-    "supertest": "7.1.4"
+    "supertest": "7.1.4",
+    "typescript": "^6.0.3"
   },
   "engines": {
     "node": ">=22"

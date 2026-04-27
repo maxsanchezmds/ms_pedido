@@ -1,7 +1,7 @@
-const { DatabasePool } = require('./pedido/database-pool');
-const { getDatabaseSchema } = require('./pedido/database-schema');
+import { DatabasePool } from './pedido/database-pool';
+import { getDatabaseSchema } from './pedido/database-schema';
 
-async function dropPreviewSchema() {
+async function dropPreviewSchema(): Promise<void> {
   const schema = getDatabaseSchema();
   if (!schema.startsWith('pr_')) {
     throw new Error(`No se puede eliminar el schema no efimero '${schema}'.`);
@@ -13,7 +13,7 @@ async function dropPreviewSchema() {
   console.log(`Dropped preview schema ${schema}`);
 }
 
-dropPreviewSchema().catch((error) => {
+dropPreviewSchema().catch((error: unknown) => {
   console.error(error);
   process.exit(1);
 });

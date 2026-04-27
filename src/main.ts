@@ -1,10 +1,10 @@
-require('reflect-metadata');
+import 'reflect-metadata';
 
-const { NestFactory } = require('@nestjs/core');
-const { AppModule } = require('./app.module');
-const { DatabaseInitializer } = require('./pedido/database-initializer');
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { DatabaseInitializer } from './pedido/database-initializer';
 
-async function bootstrap() {
+async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, { bodyParser: true });
   const databaseInitializer = app.get(DatabaseInitializer);
   await databaseInitializer.ensureSchema();
@@ -13,7 +13,7 @@ async function bootstrap() {
   await app.listen(port, '0.0.0.0');
 }
 
-bootstrap().catch((error) => {
+bootstrap().catch((error: unknown) => {
   console.error('ms_pedido failed to start', error);
   process.exit(1);
 });

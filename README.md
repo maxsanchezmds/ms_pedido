@@ -1,6 +1,6 @@
 # ms_pedido
 
-Microservicio Nest.js/Express para gestionar pedidos.
+Microservicio NestJS/Express en TypeScript para gestionar pedidos.
 
 ## Endpoints
 
@@ -17,6 +17,12 @@ Microservicio Nest.js/Express para gestionar pedidos.
 - `DATABASE_SCHEMA`: schema PostgreSQL a usar. Default `public`. Los previews usan `pr_<numero>`.
 
 Tambien se soportan `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_NAME`, `DATABASE_USER` y `DATABASE_PASSWORD`.
+
+## Desarrollo
+
+- `npm run build` compila TypeScript estricto a `dist`.
+- `npm test` compila la suite a `dist-test` y ejecuta Jest.
+- `npm start` ejecuta `dist/main.js`; la imagen Docker produce ese artefacto en una etapa de build y conserva solo dependencias de produccion en runtime.
 
 ## CI/CD
 

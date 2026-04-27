@@ -1,8 +1,12 @@
-const { BadRequestException, NotFoundException } = require('@nestjs/common');
-const { PedidoService } = require('./pedido.service');
+import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { PedidoRepository } from './pedido.repository';
+import { PedidoService } from './pedido.service';
+import { Pedido } from './pedido.types';
+
+type PedidoRepositoryMock = jest.Mocked<Pick<PedidoRepository, 'create' | 'update' | 'cancel' | 'findStatusById'>>;
 
 describe('PedidoService', () => {
-  const repository = {
+  const repository: PedidoRepositoryMock = {
     create: jest.fn(),
     update: jest.fn(),
     cancel: jest.fn(),
@@ -14,7 +18,7 @@ describe('PedidoService', () => {
   });
 
   test('crea pedidos con productos y direccion validos', async () => {
-    repository.create.mockImplementation((pedido) => Promise.resolve(pedido));
+    repository.create.mockImplementation((pedido: Pedido) => Promise.resolve(pedido));
     const service = new PedidoService(repository);
 
     const pedido = await service.create({
@@ -30,10 +34,12 @@ describe('PedidoService', () => {
   test('rechaza productos sin cantidad positiva', async () => {
     const service = new PedidoService(repository);
 
-    await expect(service.create({
-      productos: [{ id_producto: 'sku-1', cantidad: 0 }],
-      direccion_despacho: 'Av. Siempre Viva 123',
-    })).rejects.toBeInstanceOf(BadRequestException);
+    await expect(
+      service.create({
+        productos: [{ id_producto: 'sku-1', cantidad: 0 }],
+        direccion_despacho: 'Av. Siempre Viva 123',
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 
   test('rechaza requests sin body con bad request', async () => {

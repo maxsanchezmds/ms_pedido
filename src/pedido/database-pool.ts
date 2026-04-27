@@ -1,20 +1,25 @@
-const { Injectable } = require('@nestjs/common');
-const { Pool } = require('pg');
+import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import { Pool, PoolConfig, QueryResult, QueryResultRow } from 'pg';
 
-class DatabasePool {
+type PgSslConfig = false | { rejectUnauthorized: false };
+
+@Injectable()
+export class DatabasePool implements OnModuleDestroy {
+  private readonly pool: Pool;
+
   constructor() {
     this.pool = new Pool(this.getPoolConfiguration());
   }
 
-  query(text, params) {
-    return this.pool.query(text, params);
+  query<T extends QueryResultRow = QueryResultRow>(text: string, params?: unknown[]): Promise<QueryResult<T>> {
+    return this.pool.query<T>(text, params);
   }
 
-  async onModuleDestroy() {
+  async onModuleDestroy(): Promise<void> {
     await this.pool.end();
   }
 
-  getPoolConfiguration() {
+  private getPoolConfiguration(): PoolConfig {
     if (process.env.DATABASE_URL) {
       return {
         connectionString: process.env.DATABASE_URL,
@@ -32,7 +37,7 @@ class DatabasePool {
     };
   }
 
-  shouldUseSsl() {
+  private shouldUseSsl(): PgSslConfig {
     if (process.env.DATABASE_SSL === 'false') {
       return false;
     }
@@ -45,7 +50,3 @@ class DatabasePool {
     return databaseEndpoint.includes('.rds.amazonaws.com') ? { rejectUnauthorized: false } : false;
   }
 }
-
-Injectable()(DatabasePool);
-
-module.exports = { DatabasePool };

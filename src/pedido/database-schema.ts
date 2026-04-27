@@ -1,21 +1,20 @@
 const DEFAULT_SCHEMA = 'public';
+const VALID_SCHEMA_PATTERN = /^[a-z][a-z0-9_]*$/;
 
-function getDatabaseSchema() {
+export function getDatabaseSchema(): string {
   const schema = process.env.DATABASE_SCHEMA || DEFAULT_SCHEMA;
 
-  if (!/^[a-z][a-z0-9_]*$/.test(schema)) {
+  if (!VALID_SCHEMA_PATTERN.test(schema)) {
     throw new Error('DATABASE_SCHEMA debe comenzar con una letra y usar solo minusculas, numeros o guion bajo.');
   }
 
   return schema;
 }
 
-function quoteIdentifier(identifier) {
+export function quoteIdentifier(identifier: string): string {
   return `"${identifier.replace(/"/g, '""')}"`;
 }
 
-function getPedidosTableName() {
+export function getPedidosTableName(): string {
   return `${quoteIdentifier(getDatabaseSchema())}.pedidos`;
 }
-
-module.exports = { getDatabaseSchema, getPedidosTableName };
