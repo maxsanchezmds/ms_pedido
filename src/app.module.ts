@@ -4,11 +4,19 @@ import { DatabaseInitializer } from './pedido/database-initializer';
 import { DatabasePool } from './pedido/database-pool';
 import { PedidoController } from './pedido/pedido.controller';
 import { PedidoEventPublisher } from './pedido/pedido-event-publisher';
+import { PedidoRequestValidator } from './pedido/pedido-request-validator';
 import { PedidoRepository } from './pedido/pedido.repository';
 import { PedidoService } from './pedido/pedido.service';
 
 @Module({
   controllers: [HealthController, PedidoController],
-  providers: [DatabasePool, DatabaseInitializer, PedidoRepository, PedidoEventPublisher, PedidoService],
+  providers: [
+    DatabasePool,
+    DatabaseInitializer,
+    PedidoRepository,
+    PedidoEventPublisher,
+    PedidoRequestValidator,
+    PedidoService,
+  ],
 })
 export class AppModule {}

@@ -1,7 +1,11 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
-import { Pool, PoolConfig, QueryResult, QueryResultRow } from 'pg';
+import { Pool, PoolClient, PoolConfig, QueryResult, QueryResultRow } from 'pg';
 
 type PgSslConfig = false | { rejectUnauthorized: false };
+
+export interface DatabaseClient {
+  query<T extends QueryResultRow = QueryResultRow>(text: string, params?: unknown[]): Promise<QueryResult<T>>;
+}
 
 @Injectable()
 export class DatabasePool implements OnModuleDestroy {
@@ -13,6 +17,22 @@ export class DatabasePool implements OnModuleDestroy {
 
   query<T extends QueryResultRow = QueryResultRow>(text: string, params?: unknown[]): Promise<QueryResult<T>> {
     return this.pool.query<T>(text, params);
+  }
+
+  async transaction<T>(handler: (client: DatabaseClient) => Promise<T>): Promise<T> {
+    const client = await this.pool.connect();
+
+    try {
+      await client.query('BEGIN');
+      const result = await handler(client);
+      await client.query('COMMIT');
+      return result;
+    } catch (error) {
+      await this.rollback(client);
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   async onModuleDestroy(): Promise<void> {
@@ -48,5 +68,13 @@ export class DatabasePool implements OnModuleDestroy {
 
     const databaseEndpoint = process.env.DATABASE_URL || process.env.DATABASE_HOST || '';
     return databaseEndpoint.includes('.rds.amazonaws.com') ? { rejectUnauthorized: false } : false;
+  }
+
+  private async rollback(client: PoolClient): Promise<void> {
+    try {
+      await client.query('ROLLBACK');
+    } catch {
+      // Preserve the original transaction error.
+    }
   }
 }
