@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { PedidoEventPublisher } from './pedido-event-publisher';
 import { PedidoRepository } from './pedido.repository';
 import {
   CreatePedidoRequest,
@@ -13,10 +14,14 @@ import {
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 type PedidoRepositoryPort = Pick<PedidoRepository, 'create' | 'update' | 'cancel' | 'findStatusById'>;
+type PedidoEventPublisherPort = Pick<PedidoEventPublisher, 'publishPedidoCreado'>;
 
 @Injectable()
 export class PedidoService {
-  constructor(@Inject(PedidoRepository) private readonly pedidoRepository: PedidoRepositoryPort) {}
+  constructor(
+    @Inject(PedidoRepository) private readonly pedidoRepository: PedidoRepositoryPort,
+    @Inject(PedidoEventPublisher) private readonly pedidoEventPublisher: PedidoEventPublisherPort,
+  ) {}
 
   async create(body: CreatePedidoRequest = {}): Promise<Pedido> {
     const pedido: Pedido = {
@@ -26,7 +31,10 @@ export class PedidoService {
       estado: 'creado',
     };
 
-    return this.pedidoRepository.create(pedido);
+    const createdPedido = await this.pedidoRepository.create(pedido);
+    await this.pedidoEventPublisher.publishPedidoCreado(createdPedido);
+
+    return createdPedido;
   }
 
   async update(idPedido: string, body: UpdatePedidoRequest = {}): Promise<Pedido> {
