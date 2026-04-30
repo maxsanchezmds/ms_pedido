@@ -5,7 +5,7 @@ Microservicio NestJS/Express en TypeScript para gestionar pedidos.
 ## Endpoints
 
 - `GET /` health check.
-- `POST /api/pedidos` crea un pedido.
+- `POST /api/pedidos` crea un pedido con su trazabilidad inicial.
 - `PATCH /api/pedidos/:id_pedido` edita productos, cantidades o direccion de despacho.
 - `PATCH /api/pedidos/:id_pedido/cancelar` marca el pedido como cancelado.
 - `GET /api/pedidos/:id_pedido/estado` obtiene el estado del pedido.
@@ -19,6 +19,20 @@ Microservicio NestJS/Express en TypeScript para gestionar pedidos.
 Tambien se soportan `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_NAME`, `DATABASE_USER` y `DATABASE_PASSWORD`.
 
 ## Desarrollo
+
+### Body de creacion de pedido
+
+```json
+{
+  "productos": [{ "id_producto": "sku-1", "cantidad": 2 }],
+  "direccion_despacho": "Av. Siempre Viva 123",
+  "trazabilidad_pedido": {
+    "nombre_solicitante": "Ana Perez",
+    "tipo_cargo": "Compras",
+    "empresa": "Smartlogix"
+  }
+}
+```
 
 - `npm run build` compila TypeScript estricto a `dist`.
 - `npm test` compila la suite a `dist-test` y ejecuta Jest.

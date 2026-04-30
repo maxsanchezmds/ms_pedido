@@ -18,3 +18,7 @@ export function quoteIdentifier(identifier: string): string {
 export function getPedidosTableName(): string {
   return `${quoteIdentifier(getDatabaseSchema())}.pedidos`;
 }
+
+export function getTrazabilidadPedidoTableName(): string {
+  return `${quoteIdentifier(getDatabaseSchema())}.trazabilidad_pedido`;
+}

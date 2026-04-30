@@ -1,13 +1,13 @@
 import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import { PedidoService } from './pedido.service';
-import { CreatePedidoRequest, Pedido, PedidoStatus, UpdatePedidoRequest } from './pedido.types';
+import { CreatePedidoRequest, Pedido, PedidoConTrazabilidad, PedidoStatus, UpdatePedidoRequest } from './pedido.types';
 
 @Controller('api/pedidos')
 export class PedidoController {
   constructor(private readonly pedidoService: PedidoService) {}
 
   @Post()
-  create(@Body() body: CreatePedidoRequest): Promise<Pedido> {
+  create(@Body() body: CreatePedidoRequest): Promise<PedidoConTrazabilidad> {
     return this.pedidoService.create(body);
   }
 
