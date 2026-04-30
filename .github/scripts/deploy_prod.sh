@@ -41,12 +41,29 @@ build_register_payload() {
 }
 
 patch_pedidos_task_definition() {
-  jq -c --arg container "$PEDIDOS_CONTAINER_NAME" --arg image "$IMAGE_URI" '
+  jq -c \
+    --arg container "$PEDIDOS_CONTAINER_NAME" \
+    --arg image "$IMAGE_URI" \
+    --arg aws_region "$AWS_REGION" \
+    --arg events_topic_arn "$EVENTS_TOPIC_ARN" '
     .containerDefinitions |= map(
       if .name == $container then
         .image = $image |
         del(.command) |
-        .environment = ((.environment // []) | map(select(.name != "NODE_ENV" and .name != "DATABASE_SCHEMA" and .name != "DATABASE_SSL")) + [{"name":"NODE_ENV","value":"main"},{"name":"DATABASE_SSL","value":"true"}])
+        .environment = ((.environment // [])
+          | map(select(
+              .name != "NODE_ENV"
+              and .name != "DATABASE_SCHEMA"
+              and .name != "DATABASE_SSL"
+              and .name != "AWS_REGION"
+              and .name != "EVENTS_TOPIC_ARN"
+            ))
+          + [
+              {"name":"NODE_ENV","value":"main"},
+              {"name":"DATABASE_SSL","value":"true"},
+              {"name":"AWS_REGION","value":$aws_region},
+              {"name":"EVENTS_TOPIC_ARN","value":$events_topic_arn}
+            ])
       else
         .
       end
@@ -184,6 +201,7 @@ CANARY_SERVICE_NAME="$(get_param "$PEDIDOS_PREFIX" canary_service_name)"
 PEDIDOS_CONTAINER_NAME="$(get_param "$PEDIDOS_PREFIX" container_name)"
 PEDIDOS_TASK_FAMILY="$(get_param "$PEDIDOS_PREFIX" task_definition_family)"
 CANARY_DISCOVERY_SERVICE_ARN="$(get_param "$PEDIDOS_PREFIX" canary_discovery_service_arn)"
+EVENTS_TOPIC_ARN="$(get_param "$PEDIDOS_PREFIX" events_topic_arn)"
 
 KONG_SERVICE_NAME="$(get_param "$KONG_PREFIX" service_name)"
 KONG_CONTAINER_NAME="$(get_param "$KONG_PREFIX" container_name)"
