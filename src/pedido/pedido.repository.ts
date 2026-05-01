@@ -79,29 +79,14 @@ export class PedidoRepository {
   }
 
   async update(idPedido: string, fields: PedidoUpdateFields): Promise<Pedido | null> {
-    const assignments: string[] = [];
-    const values: unknown[] = [];
-
-    if (fields.productos !== undefined) {
-      values.push(JSON.stringify(fields.productos));
-      assignments.push(`productos = $${values.length}::jsonb`);
-    }
-
-    if (fields.direccion_despacho !== undefined) {
-      values.push(fields.direccion_despacho);
-      assignments.push(`direccion_despacho = $${values.length}`);
-    }
-
-    values.push(idPedido);
-
     const result = await this.databasePool.query<Pedido>(
       `
         UPDATE ${this.pedidosTableName}
-        SET ${assignments.join(', ')}
-        WHERE id_pedido = $${values.length}
+        SET direccion_despacho = $1
+        WHERE id_pedido = $2
         RETURNING id_pedido, productos, direccion_despacho, estado, fecha_hora
       `,
-      values,
+      [fields.direccion_despacho, idPedido],
     );
 
     return result.rows[0] ?? null;

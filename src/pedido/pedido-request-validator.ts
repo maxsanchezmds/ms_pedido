@@ -29,21 +29,17 @@ export class PedidoRequestValidator {
   }
 
   validateUpdateRequest(body: UpdatePedidoRequest): PedidoUpdateFields {
-    const fields: PedidoUpdateFields = {};
-
     if (body.productos !== undefined) {
-      fields.productos = this.validateProductos(body.productos);
+      throw new BadRequestException('productos no se puede modificar en un pedido existente.');
     }
 
-    if (body.direccion_despacho !== undefined) {
-      fields.direccion_despacho = this.validateRequiredText(body.direccion_despacho, 'direccion_despacho');
+    if (body.direccion_despacho === undefined) {
+      throw new BadRequestException('Debe indicar direccion_despacho para modificar.');
     }
 
-    if (Object.keys(fields).length === 0) {
-      throw new BadRequestException('Debe indicar al menos productos o direccion_despacho para modificar.');
-    }
-
-    return fields;
+    return {
+      direccion_despacho: this.validateRequiredText(body.direccion_despacho, 'direccion_despacho'),
+    };
   }
 
   validateIdPedido(idPedido: string): void {

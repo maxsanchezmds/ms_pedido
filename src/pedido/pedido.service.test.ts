@@ -93,6 +93,38 @@ describe('PedidoService', () => {
     await expect(service.create()).rejects.toBeInstanceOf(BadRequestException);
   });
 
+  test('actualiza solo la direccion de despacho', async () => {
+    const pedidoActualizado = {
+      id_pedido: '7d25ed8e-471e-4d1a-a432-bfccca5cfe4f',
+      productos: [{ id_producto: 'sku-1', cantidad: 2 }],
+      direccion_despacho: 'Nueva direccion 456',
+      estado: 'creado' as const,
+      fecha_hora: new Date(),
+    };
+    repository.update.mockResolvedValue(pedidoActualizado);
+    const service = new PedidoService(repository, eventPublisher, requestValidator);
+
+    const pedido = await service.update('7d25ed8e-471e-4d1a-a432-bfccca5cfe4f', {
+      direccion_despacho: ' Nueva direccion 456 ',
+    });
+
+    expect(pedido).toBe(pedidoActualizado);
+    expect(repository.update).toHaveBeenCalledWith('7d25ed8e-471e-4d1a-a432-bfccca5cfe4f', {
+      direccion_despacho: 'Nueva direccion 456',
+    });
+  });
+
+  test('rechaza actualizar productos de un pedido existente', async () => {
+    const service = new PedidoService(repository, eventPublisher, requestValidator);
+
+    await expect(
+      service.update('7d25ed8e-471e-4d1a-a432-bfccca5cfe4f', {
+        productos: [{ id_producto: 'sku-1', cantidad: 3 }],
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(repository.update).not.toHaveBeenCalled();
+  });
+
   test('retorna not found al cancelar un pedido inexistente', async () => {
     repository.cancel.mockResolvedValue(null);
     const service = new PedidoService(repository, eventPublisher, requestValidator);
