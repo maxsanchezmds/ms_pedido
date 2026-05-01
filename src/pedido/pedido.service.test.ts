@@ -6,7 +6,9 @@ import { PedidoService } from './pedido.service';
 import { CreatePedidoData, PedidoConTrazabilidad } from './pedido.types';
 
 type PedidoRepositoryMock = jest.Mocked<Pick<PedidoRepository, 'create' | 'update' | 'cancel' | 'findStatusById'>>;
-type PedidoEventPublisherMock = jest.Mocked<Pick<PedidoEventPublisher, 'publishPedidoCreado'>>;
+type PedidoEventPublisherMock = jest.Mocked<
+  Pick<PedidoEventPublisher, 'publishPedidoCreado' | 'publishPedidoActualizado' | 'publishPedidoCancelado'>
+>;
 
 describe('PedidoService', () => {
   const repository: PedidoRepositoryMock = {
@@ -17,12 +19,16 @@ describe('PedidoService', () => {
   };
   const eventPublisher: PedidoEventPublisherMock = {
     publishPedidoCreado: jest.fn(),
+    publishPedidoActualizado: jest.fn(),
+    publishPedidoCancelado: jest.fn(),
   };
   const requestValidator = new PedidoRequestValidator();
 
   beforeEach(() => {
     jest.clearAllMocks();
     eventPublisher.publishPedidoCreado.mockResolvedValue(undefined);
+    eventPublisher.publishPedidoActualizado.mockResolvedValue(undefined);
+    eventPublisher.publishPedidoCancelado.mockResolvedValue(undefined);
   });
 
   test('crea pedidos con productos y direccion validos', async () => {
@@ -112,6 +118,7 @@ describe('PedidoService', () => {
     expect(repository.update).toHaveBeenCalledWith('7d25ed8e-471e-4d1a-a432-bfccca5cfe4f', {
       direccion_despacho: 'Nueva direccion 456',
     });
+    expect(eventPublisher.publishPedidoActualizado).toHaveBeenCalledWith(pedidoActualizado);
   });
 
   test('rechaza actualizar productos de un pedido existente', async () => {
@@ -123,6 +130,24 @@ describe('PedidoService', () => {
       }),
     ).rejects.toBeInstanceOf(BadRequestException);
     expect(repository.update).not.toHaveBeenCalled();
+    expect(eventPublisher.publishPedidoActualizado).not.toHaveBeenCalled();
+  });
+
+  test('publica evento al cancelar un pedido existente', async () => {
+    const pedidoCancelado = {
+      id_pedido: '7d25ed8e-471e-4d1a-a432-bfccca5cfe4f',
+      productos: [{ id_producto: 'sku-1', cantidad: 2 }],
+      direccion_despacho: 'Av. Siempre Viva 123',
+      estado: 'cancelado' as const,
+      fecha_hora: new Date(),
+    };
+    repository.cancel.mockResolvedValue(pedidoCancelado);
+    const service = new PedidoService(repository, eventPublisher, requestValidator);
+
+    const pedido = await service.cancel('7d25ed8e-471e-4d1a-a432-bfccca5cfe4f');
+
+    expect(pedido).toBe(pedidoCancelado);
+    expect(eventPublisher.publishPedidoCancelado).toHaveBeenCalledWith(pedidoCancelado);
   });
 
   test('retorna not found al cancelar un pedido inexistente', async () => {
@@ -130,5 +155,6 @@ describe('PedidoService', () => {
     const service = new PedidoService(repository, eventPublisher, requestValidator);
 
     await expect(service.cancel('7d25ed8e-471e-4d1a-a432-bfccca5cfe4f')).rejects.toBeInstanceOf(NotFoundException);
+    expect(eventPublisher.publishPedidoCancelado).not.toHaveBeenCalled();
   });
 });
