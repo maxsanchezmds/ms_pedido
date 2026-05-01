@@ -12,7 +12,10 @@ import {
 } from './pedido.types';
 
 type PedidoRepositoryPort = Pick<PedidoRepository, 'create' | 'update' | 'cancel' | 'findStatusById'>;
-type PedidoEventPublisherPort = Pick<PedidoEventPublisher, 'publishPedidoCreado'>;
+type PedidoEventPublisherPort = Pick<
+  PedidoEventPublisher,
+  'publishPedidoCreado' | 'publishPedidoActualizado' | 'publishPedidoCancelado'
+>;
 
 @Injectable()
 export class PedidoService {
@@ -43,6 +46,8 @@ export class PedidoService {
       throw new NotFoundException('Pedido no encontrado.');
     }
 
+    await this.pedidoEventPublisher.publishPedidoActualizado(pedido);
+
     return pedido;
   }
 
@@ -53,6 +58,8 @@ export class PedidoService {
     if (!pedido) {
       throw new NotFoundException('Pedido no encontrado.');
     }
+
+    await this.pedidoEventPublisher.publishPedidoCancelado(pedido);
 
     return pedido;
   }
