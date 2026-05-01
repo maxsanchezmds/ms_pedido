@@ -24,7 +24,7 @@ export interface PedidoConTrazabilidad extends Pedido {
   trazabilidad_pedido: Omit<TrazabilidadPedido, 'id_pedido'>;
 }
 
-export type PedidoUpdateFields = Partial<Pick<Pedido, 'productos' | 'direccion_despacho'>>;
+export type PedidoUpdateFields = Pick<Pedido, 'direccion_despacho'>;
 
 export type PedidoStatus = Pick<Pedido, 'id_pedido' | 'estado'>;
 

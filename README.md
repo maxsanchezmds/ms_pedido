@@ -6,7 +6,7 @@ Microservicio NestJS/Express en TypeScript para gestionar pedidos.
 
 - `GET /` health check.
 - `POST /api/pedidos` crea un pedido con su trazabilidad inicial.
-- `PATCH /api/pedidos/:id_pedido` edita productos, cantidades o direccion de despacho.
+- `PATCH /api/pedidos/:id_pedido` edita solo la direccion de despacho.
 - `PATCH /api/pedidos/:id_pedido/cancelar` marca el pedido como cancelado.
 - `GET /api/pedidos/:id_pedido/estado` obtiene el estado del pedido.
 
