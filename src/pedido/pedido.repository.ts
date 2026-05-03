@@ -97,7 +97,7 @@ export class PedidoRepository {
       `
         UPDATE ${this.pedidosTableName}
         SET estado = 'cancelado'
-        WHERE id_pedido = $1
+        WHERE id_pedido = $1 AND estado = 'creado'
         RETURNING id_pedido, productos, direccion_despacho, estado, fecha_hora
       `,
       [idPedido],
@@ -106,10 +106,40 @@ export class PedidoRepository {
     return result.rows[0] ?? null;
   }
 
+  async approve(idPedido: string): Promise<Pedido | null> {
+    return this.updateEstado(idPedido, 'aprobado', 'creado');
+  }
+
+  async reject(idPedido: string): Promise<Pedido | null> {
+    return this.updateEstado(idPedido, 'rechazado', 'creado');
+  }
+
+  async finalize(idPedido: string): Promise<Pedido | null> {
+    return this.updateEstado(idPedido, 'finalizado', 'aprobado');
+  }
+
   async findStatusById(idPedido: string): Promise<PedidoStatus | null> {
     const result = await this.databasePool.query<PedidoStatus>(
       `SELECT id_pedido, estado FROM ${this.pedidosTableName} WHERE id_pedido = $1`,
       [idPedido],
+    );
+
+    return result.rows[0] ?? null;
+  }
+
+  private async updateEstado(
+    idPedido: string,
+    nextEstado: Pedido['estado'],
+    currentEstado: Pedido['estado'],
+  ): Promise<Pedido | null> {
+    const result = await this.databasePool.query<Pedido>(
+      `
+        UPDATE ${this.pedidosTableName}
+        SET estado = $1
+        WHERE id_pedido = $2 AND estado = $3
+        RETURNING id_pedido, productos, direccion_despacho, estado, fecha_hora
+      `,
+      [nextEstado, idPedido, currentEstado],
     );
 
     return result.rows[0] ?? null;

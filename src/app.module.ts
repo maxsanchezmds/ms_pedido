@@ -4,6 +4,7 @@ import { DatabaseInitializer } from './pedido/database-initializer';
 import { DatabasePool } from './pedido/database-pool';
 import { PedidoController } from './pedido/pedido.controller';
 import { PedidoEventPublisher } from './pedido/pedido-event-publisher';
+import { PedidoEventsConsumer } from './pedido/pedido-events.consumer';
 import { PedidoRequestValidator } from './pedido/pedido-request-validator';
 import { PedidoRepository } from './pedido/pedido.repository';
 import { PedidoService } from './pedido/pedido.service';
@@ -15,6 +16,7 @@ import { PedidoService } from './pedido/pedido.service';
     DatabaseInitializer,
     PedidoRepository,
     PedidoEventPublisher,
+    PedidoEventsConsumer,
     PedidoRequestValidator,
     PedidoService,
   ],

@@ -22,13 +22,30 @@ export class DatabaseInitializer {
         id_pedido UUID PRIMARY KEY,
         productos JSONB NOT NULL,
         direccion_despacho TEXT NOT NULL,
-        estado VARCHAR(20) NOT NULL CHECK (estado IN ('creado', 'cancelado')),
+        estado VARCHAR(20) NOT NULL CHECK (estado IN ('creado', 'aprobado', 'rechazado', 'cancelado', 'finalizado')),
         fecha_hora TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )
     `);
     await this.databasePool.query(`
       ALTER TABLE ${pedidosTableName}
       ADD COLUMN IF NOT EXISTS fecha_hora TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    `);
+    await this.databasePool.query(`
+      DO $$
+      BEGIN
+        IF EXISTS (
+          SELECT 1
+          FROM pg_constraint
+          WHERE conrelid = '${pedidosTableName}'::regclass
+            AND conname = 'pedidos_estado_check'
+        ) THEN
+          ALTER TABLE ${pedidosTableName} DROP CONSTRAINT pedidos_estado_check;
+        END IF;
+
+        ALTER TABLE ${pedidosTableName}
+        ADD CONSTRAINT pedidos_estado_check
+        CHECK (estado IN ('creado', 'aprobado', 'rechazado', 'cancelado', 'finalizado'));
+      END $$;
     `);
     await this.databasePool.query(`
       CREATE TABLE IF NOT EXISTS ${trazabilidadPedidoTableName} (

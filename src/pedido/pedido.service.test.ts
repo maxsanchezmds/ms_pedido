@@ -5,9 +5,18 @@ import { PedidoRepository } from './pedido.repository';
 import { PedidoService } from './pedido.service';
 import { CreatePedidoData, PedidoConTrazabilidad } from './pedido.types';
 
-type PedidoRepositoryMock = jest.Mocked<Pick<PedidoRepository, 'create' | 'update' | 'cancel' | 'findStatusById'>>;
+type PedidoRepositoryMock = jest.Mocked<
+  Pick<PedidoRepository, 'create' | 'update' | 'cancel' | 'approve' | 'reject' | 'finalize' | 'findStatusById'>
+>;
 type PedidoEventPublisherMock = jest.Mocked<
-  Pick<PedidoEventPublisher, 'publishPedidoCreado' | 'publishPedidoActualizado' | 'publishPedidoCancelado'>
+  Pick<
+    PedidoEventPublisher,
+    | 'publishPedidoCreado'
+    | 'publishPedidoActualizado'
+    | 'publishPedidoCancelado'
+    | 'publishPedidoAprobado'
+    | 'publishPedidoFinalizado'
+  >
 >;
 
 describe('PedidoService', () => {
@@ -15,12 +24,17 @@ describe('PedidoService', () => {
     create: jest.fn(),
     update: jest.fn(),
     cancel: jest.fn(),
+    approve: jest.fn(),
+    reject: jest.fn(),
+    finalize: jest.fn(),
     findStatusById: jest.fn(),
   };
   const eventPublisher: PedidoEventPublisherMock = {
     publishPedidoCreado: jest.fn(),
     publishPedidoActualizado: jest.fn(),
     publishPedidoCancelado: jest.fn(),
+    publishPedidoAprobado: jest.fn(),
+    publishPedidoFinalizado: jest.fn(),
   };
   const requestValidator = new PedidoRequestValidator();
 
@@ -29,6 +43,8 @@ describe('PedidoService', () => {
     eventPublisher.publishPedidoCreado.mockResolvedValue(undefined);
     eventPublisher.publishPedidoActualizado.mockResolvedValue(undefined);
     eventPublisher.publishPedidoCancelado.mockResolvedValue(undefined);
+    eventPublisher.publishPedidoAprobado.mockResolvedValue(undefined);
+    eventPublisher.publishPedidoFinalizado.mockResolvedValue(undefined);
   });
 
   test('crea pedidos con productos y direccion validos', async () => {
@@ -141,6 +157,10 @@ describe('PedidoService', () => {
       estado: 'cancelado' as const,
       fecha_hora: new Date(),
     };
+    repository.findStatusById.mockResolvedValue({
+      id_pedido: '7d25ed8e-471e-4d1a-a432-bfccca5cfe4f',
+      estado: 'creado',
+    });
     repository.cancel.mockResolvedValue(pedidoCancelado);
     const service = new PedidoService(repository, eventPublisher, requestValidator);
 
@@ -151,10 +171,61 @@ describe('PedidoService', () => {
   });
 
   test('retorna not found al cancelar un pedido inexistente', async () => {
-    repository.cancel.mockResolvedValue(null);
+    repository.findStatusById.mockResolvedValue(null);
     const service = new PedidoService(repository, eventPublisher, requestValidator);
 
     await expect(service.cancel('7d25ed8e-471e-4d1a-a432-bfccca5cfe4f')).rejects.toBeInstanceOf(NotFoundException);
     expect(eventPublisher.publishPedidoCancelado).not.toHaveBeenCalled();
+  });
+
+  test('aprueba pedido al recibir stock_aprobado y publica pedido_aprobado', async () => {
+    const pedidoAprobado = {
+      id_pedido: '7d25ed8e-471e-4d1a-a432-bfccca5cfe4f',
+      productos: [{ id_producto: 'sku-1', cantidad: 2 }],
+      direccion_despacho: 'Av. Siempre Viva 123',
+      estado: 'aprobado' as const,
+      fecha_hora: new Date(),
+    };
+    repository.findStatusById.mockResolvedValue({ id_pedido: pedidoAprobado.id_pedido, estado: 'creado' });
+    repository.approve.mockResolvedValue(pedidoAprobado);
+    const service = new PedidoService(repository, eventPublisher, requestValidator);
+
+    await expect(service.approveFromStock(pedidoAprobado.id_pedido)).resolves.toBe(pedidoAprobado);
+
+    expect(eventPublisher.publishPedidoAprobado).toHaveBeenCalledWith(pedidoAprobado);
+  });
+
+  test('rechaza pedido al recibir stock_rechazado sin publicar pedido_aprobado', async () => {
+    const pedidoRechazado = {
+      id_pedido: '7d25ed8e-471e-4d1a-a432-bfccca5cfe4f',
+      productos: [{ id_producto: 'sku-1', cantidad: 2 }],
+      direccion_despacho: 'Av. Siempre Viva 123',
+      estado: 'rechazado' as const,
+      fecha_hora: new Date(),
+    };
+    repository.findStatusById.mockResolvedValue({ id_pedido: pedidoRechazado.id_pedido, estado: 'creado' });
+    repository.reject.mockResolvedValue(pedidoRechazado);
+    const service = new PedidoService(repository, eventPublisher, requestValidator);
+
+    await expect(service.rejectFromStock(pedidoRechazado.id_pedido)).resolves.toBe(pedidoRechazado);
+
+    expect(eventPublisher.publishPedidoAprobado).not.toHaveBeenCalled();
+  });
+
+  test('finaliza pedido aprobado al recibir envio_finalizado y publica pedido_finalizado', async () => {
+    const pedidoFinalizado = {
+      id_pedido: '7d25ed8e-471e-4d1a-a432-bfccca5cfe4f',
+      productos: [{ id_producto: 'sku-1', cantidad: 2 }],
+      direccion_despacho: 'Av. Siempre Viva 123',
+      estado: 'finalizado' as const,
+      fecha_hora: new Date(),
+    };
+    repository.findStatusById.mockResolvedValue({ id_pedido: pedidoFinalizado.id_pedido, estado: 'aprobado' });
+    repository.finalize.mockResolvedValue(pedidoFinalizado);
+    const service = new PedidoService(repository, eventPublisher, requestValidator);
+
+    await expect(service.finalizeFromEnvio(pedidoFinalizado.id_pedido)).resolves.toBe(pedidoFinalizado);
+
+    expect(eventPublisher.publishPedidoFinalizado).toHaveBeenCalledWith(pedidoFinalizado);
   });
 });
