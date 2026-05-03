@@ -1,4 +1,4 @@
-export type PedidoEstado = 'creado' | 'cancelado';
+export type PedidoEstado = 'creado' | 'aprobado' | 'rechazado' | 'cancelado' | 'finalizado';
 
 export interface PedidoProducto {
   id_producto: string;
@@ -42,4 +42,19 @@ export interface UpdatePedidoRequest {
 export interface CreatePedidoData {
   pedido: Pedido;
   trazabilidadPedido: TrazabilidadPedido;
+}
+
+export interface StockEvaluadoEvent {
+  evento: 'stock_aprobado' | 'stock_rechazado';
+  pedido: {
+    id_pedido: string;
+  };
+}
+
+export interface EnvioFinalizadoEvent {
+  evento: 'envio_finalizado';
+  pedido?: {
+    id_pedido?: unknown;
+  };
+  id_pedido?: unknown;
 }

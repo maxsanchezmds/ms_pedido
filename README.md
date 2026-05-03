@@ -15,7 +15,8 @@ Microservicio NestJS/Express en TypeScript para gestionar pedidos.
 - `PORT`: puerto HTTP. Default `3000`.
 - `DATABASE_URL`: URL PostgreSQL completa.
 - `DATABASE_SCHEMA`: schema PostgreSQL a usar. Default `public`. Los previews usan `pr_<numero>`.
-- `EVENTS_TOPIC_ARN`: ARN del topico SNS donde se publican `pedido_creado`, `pedido_actualizado` y `pedido_cancelado`.
+- `QUEUE_URL`: URL de la cola SQS donde consume `stock_aprobado`, `stock_rechazado` y `envio_finalizado`.
+- `EVENTS_TOPIC_ARN`: ARN del topico SNS donde se publican `pedido_creado`, `pedido_actualizado`, `pedido_cancelado`, `pedido_aprobado` y `pedido_finalizado`.
 
 Tambien se soportan `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_NAME`, `DATABASE_USER` y `DATABASE_PASSWORD`.
 

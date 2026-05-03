@@ -6,6 +6,8 @@ export const PEDIDO_EVENTOS = {
   CREADO: 'pedido_creado',
   ACTUALIZADO: 'pedido_actualizado',
   CANCELADO: 'pedido_cancelado',
+  APROBADO: 'pedido_aprobado',
+  FINALIZADO: 'pedido_finalizado',
 } as const;
 
 export type PedidoEvento = (typeof PEDIDO_EVENTOS)[keyof typeof PEDIDO_EVENTOS];
@@ -26,6 +28,14 @@ export class PedidoEventPublisher {
 
   async publishPedidoCancelado(pedido: Pedido): Promise<void> {
     await this.publishPedidoEvent(PEDIDO_EVENTOS.CANCELADO, pedido);
+  }
+
+  async publishPedidoAprobado(pedido: Pedido): Promise<void> {
+    await this.publishPedidoEvent(PEDIDO_EVENTOS.APROBADO, pedido);
+  }
+
+  async publishPedidoFinalizado(pedido: Pedido): Promise<void> {
+    await this.publishPedidoEvent(PEDIDO_EVENTOS.FINALIZADO, pedido);
   }
 
   private async publishPedidoEvent(evento: PedidoEvento, pedido: Pedido): Promise<void> {
